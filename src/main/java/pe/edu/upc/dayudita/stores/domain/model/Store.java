@@ -1,5 +1,4 @@
 
-//Represents the table/ identity store
 
 package pe.edu.upc.dayudita.stores.domain.model;
 
@@ -22,7 +21,7 @@ public class Store {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 200)
     private String address;
 
     @Column(length =20)

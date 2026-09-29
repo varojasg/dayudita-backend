@@ -1,4 +1,3 @@
-//Represents the table/identity Administrator
 package pe.edu.upc.dayudita.iam.domain.model;
 
 

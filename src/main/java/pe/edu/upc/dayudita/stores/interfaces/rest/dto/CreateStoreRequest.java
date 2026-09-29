@@ -1,5 +1,4 @@
 
-//Record that separates what enters through the API
 package pe.edu.upc.dayudita.stores.interfaces.rest.dto;
 
 import jakarta.validation.constraints.Email;
