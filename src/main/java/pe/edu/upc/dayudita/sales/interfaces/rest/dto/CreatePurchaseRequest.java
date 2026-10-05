@@ -1,10 +1,10 @@
 package pe.edu.upc.dayudita.sales.interfaces.rest.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
-import jakarta.validation.constraints.DecimalMin;
 import pe.edu.upc.dayudita.sales.domain.model.PurchasePaymentMode;
 
 import java.math.BigDecimal;
@@ -17,16 +17,16 @@ public record CreatePurchaseRequest(
         Long clientId,
 
         @NotNull(message = "La fecha de compra es obligatoria")
-        @PastOrPresent(message = "La fecha de compra no puede ser futura")
         LocalDate purchaseDate,
 
         @NotNull(message = "La modalidad de pago es obligatoria")
         PurchasePaymentMode paymentMode,
 
-        Integer installmentCount,
+        @DecimalMin(value = "0.0", message = "El porcentaje de cuota inicial no puede ser negativo")
+        @DecimalMax(value = "0.5", message = "El porcentaje de cuota inicial no puede superar el 50%")
+        BigDecimal porcentajeCuotaInicial,
 
-        @DecimalMin(value = "0.0000001", message = "La TEA debe ser mayor a 0")
-        BigDecimal annualEffectiveRate,
+        Integer numeroMeses,
 
         @NotEmpty(message = "La compra debe tener al menos un producto")
         List<@Valid PurchaseItemRequest> items

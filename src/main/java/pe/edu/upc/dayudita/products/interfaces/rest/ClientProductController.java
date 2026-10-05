@@ -50,7 +50,6 @@ public class ClientProductController {
                 product.getImageUrl(),
                 product.getCashPrice(),
                 product.getCreditPrice(),
-                product.getAllowsSinglePayment(),
                 product.getAllowsInstallments(),
                 product.getActive()
         );

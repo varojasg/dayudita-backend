@@ -48,9 +48,6 @@ public class Product {
     private BigDecimal creditPrice;
 
     @Column(nullable = false)
-    private Boolean allowsSinglePayment;
-
-    @Column(nullable = false)
     private Boolean allowsInstallments;
 
     @Column(nullable = false)

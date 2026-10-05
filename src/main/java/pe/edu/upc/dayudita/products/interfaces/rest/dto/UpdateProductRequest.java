@@ -35,9 +35,6 @@ public record UpdateProductRequest(
         @Digits(integer = 10, fraction = 2, message = "El precio a credito debe tener maximo 2 decimales")
         BigDecimal creditPrice,
 
-        @NotNull(message = "Debe indicar si permite pago unico")
-        Boolean allowsSinglePayment,
-
         @NotNull(message = "Debe indicar si permite cuotas")
         Boolean allowsInstallments
 

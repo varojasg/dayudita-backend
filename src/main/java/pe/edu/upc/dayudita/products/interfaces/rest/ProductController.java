@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/stores/{storeId}/products")
+@PreAuthorize("hasRole('STORE_ADMIN')")
 public class ProductController {
 
     private final ProductService productService;
@@ -21,7 +22,6 @@ public class ProductController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('STORE_ADMIN','SYSTEM_ADMIN')")
     public List<ProductResponse> getProductsByStore(@PathVariable Long storeId){
         return productService.getProductsByStore(storeId)
                 .stream()
@@ -30,7 +30,6 @@ public class ProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('STORE_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse createProduct(
             @PathVariable Long storeId,
@@ -40,7 +39,6 @@ public class ProductController {
     }
 
     @PutMapping("/{productId}")
-    @PreAuthorize("hasRole('STORE_ADMIN')")
     public ProductResponse updateProduct(
             @PathVariable Long storeId,
             @PathVariable Long productId,
@@ -50,7 +48,6 @@ public class ProductController {
     }
 
     @PatchMapping("/{productId}/status")
-    @PreAuthorize("hasRole('STORE_ADMIN')")
     public ProductResponse updateProductStatus(
             @PathVariable Long storeId,
             @PathVariable Long productId,
@@ -60,7 +57,6 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    @PreAuthorize("hasRole('STORE_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deactivateProduct(
             @PathVariable Long storeId,
@@ -81,7 +77,6 @@ public class ProductController {
                 product.getImageUrl(),
                 product.getCashPrice(),
                 product.getCreditPrice(),
-                product.getAllowsSinglePayment(),
                 product.getAllowsInstallments(),
                 product.getActive()
         );

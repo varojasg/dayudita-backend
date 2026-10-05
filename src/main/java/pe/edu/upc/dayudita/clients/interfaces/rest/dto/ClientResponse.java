@@ -1,5 +1,9 @@
 package pe.edu.upc.dayudita.clients.interfaces.rest.dto;
 
+import pe.edu.upc.dayudita.clients.domain.model.CreditCurrency;
+
+import java.math.BigDecimal;
+
 public record ClientResponse(
 
         Long id,
@@ -9,8 +13,12 @@ public record ClientResponse(
         String documentNumber,
         String email,
         String phone,
-        Integer cutoffDay,
-        Integer paymentDay,
+        BigDecimal teaPactada,
+        BigDecimal teaMoratoriaPactada,
+        CreditCurrency currency,
+        BigDecimal limiteCredito,
+        Integer plazoMaximoMeses,
+        Integer diaCorte,
         Boolean active
 
 ) {

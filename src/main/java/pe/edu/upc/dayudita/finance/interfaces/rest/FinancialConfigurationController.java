@@ -3,50 +3,57 @@ package pe.edu.upc.dayudita.finance.interfaces.rest;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import pe.edu.upc.dayudita.finance.application.CreditPlanService;
+import pe.edu.upc.dayudita.finance.application.FinancialCalculator;
 import pe.edu.upc.dayudita.finance.application.FinancialConfigurationService;
 import pe.edu.upc.dayudita.finance.domain.model.FinancialConfiguration;
 import pe.edu.upc.dayudita.finance.interfaces.rest.dto.FinancialConfigurationResponse;
 import pe.edu.upc.dayudita.finance.interfaces.rest.dto.UpdateFinancialConfigurationRequest;
+import pe.edu.upc.dayudita.iam.application.CurrentUserService;
 
 @RestController
-@RequestMapping("/api/finance/configuration")
+@RequestMapping("/api/stores/{storeId}/credit-policy")
+@PreAuthorize("hasRole('STORE_ADMIN')")
 public class FinancialConfigurationController {
 
     private final FinancialConfigurationService financialConfigurationService;
+    private final CurrentUserService currentUserService;
 
-    public FinancialConfigurationController(FinancialConfigurationService financialConfigurationService){
+    public FinancialConfigurationController(
+            FinancialConfigurationService financialConfigurationService,
+            CurrentUserService currentUserService
+    ){
         this.financialConfigurationService = financialConfigurationService;
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','STORE_ADMIN')")
-    public FinancialConfigurationResponse getConfiguration(){
-        return toResponse(financialConfigurationService.getConfiguration());
+    public FinancialConfigurationResponse getCreditPolicy(@PathVariable Long storeId){
+        currentUserService.validateStoreAdmin(storeId);
+        return toResponse(financialConfigurationService.getConfiguration(storeId));
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public FinancialConfigurationResponse updateConfiguration(
+    public FinancialConfigurationResponse updateCreditPolicy(
+            @PathVariable Long storeId,
             @Valid @RequestBody UpdateFinancialConfigurationRequest request
     ){
-        return toResponse(financialConfigurationService.updateConfiguration(request));
+        currentUserService.validateStoreAdmin(storeId);
+        return toResponse(financialConfigurationService.updateConfiguration(storeId, request));
     }
 
     private FinancialConfigurationResponse toResponse(FinancialConfiguration configuration){
         return new FinancialConfigurationResponse(
                 configuration.getId(),
+                configuration.getStore().getId(),
                 "PEN",
-                360,
-                CreditPlanService.PAYMENT_PERIOD_DAYS,
-                configuration.getMinAnnualEffectiveRate(),
-                configuration.getMaxAnnualEffectiveRate(),
-                configuration.getAnnualEffectiveRate(),
-                configuration.getMoratoryAnnualEffectiveRate(),
-                configuration.getMinCapital(),
-                configuration.getMaxCapital(),
-                configuration.getCreditLimit(),
-                configuration.getMaxInstallments()
+                FinancialCalculator.COMMERCIAL_YEAR_DAYS,
+                FinancialCalculator.PAYMENT_PERIOD_DAYS,
+                configuration.getCapitalMinimo(),
+                configuration.getCapitalMaximo(),
+                configuration.getTeaMinima(),
+                configuration.getTeaMaxima(),
+                configuration.getPlazoMaximoMeses(),
+                configuration.getOtorgaGracia()
         );
     }
 }

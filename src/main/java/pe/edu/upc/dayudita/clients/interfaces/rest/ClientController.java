@@ -69,12 +69,7 @@ public class ClientController {
             @Valid @RequestBody AssociateClientRequest request
     ){
         return toResponse(
-                clientService.associateClient(
-                        storeId,
-                        clientId,
-                        request.cutoffDay(),
-                        request.paymentDay()
-                )
+                clientService.associateClient(storeId, clientId, request)
         );
     }
 
@@ -121,8 +116,12 @@ public class ClientController {
                 account.getClient().getDocumentNumber(),
                 account.getClient().getEmail(),
                 account.getClient().getPhone(),
-                account.getCutoffDay(),
-                account.getPaymentDay(),
+                account.getTeaPactada(),
+                account.getTeaMoratoriaPactada(),
+                account.getCurrency(),
+                account.getLimiteCredito(),
+                account.getPlazoMaximoMeses(),
+                account.getDiaCorte(),
                 account.getActive()
         );
     }

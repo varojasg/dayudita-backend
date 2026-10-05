@@ -26,6 +26,10 @@ public class Installment {
     @Column(nullable = false)
     private Integer installmentNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private GraceType type;
+
     @Column(nullable = false)
     private LocalDate dueDate;
 

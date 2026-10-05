@@ -4,9 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pe.edu.upc.dayudita.stores.domain.model.Store;
 
 import java.math.BigDecimal;
 
+/**
+ * Política de crédito de una tienda (método francés con gracia).
+ * Es la política comercial, no una configuración global del sistema.
+ */
 @Entity
 @Table(name = "financial_configuration")
 @Getter
@@ -18,27 +23,29 @@ public class FinancialConfiguration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, precision = 16, scale = 12)
-    private BigDecimal minAnnualEffectiveRate;
-
-    @Column(nullable = false, precision = 16, scale = 12)
-    private BigDecimal maxAnnualEffectiveRate;
-
-    @Column(nullable = false, precision = 16, scale = 12)
-    private BigDecimal annualEffectiveRate;
-
-    @Column(nullable = false, precision = 16, scale = 12)
-    private BigDecimal moratoryAnnualEffectiveRate;
+    @OneToOne
+    @JoinColumn(name = "store_id", nullable = false, unique = true)
+    private Store store;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal minCapital;
+    private BigDecimal capitalMinimo;
 
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal maxCapital;
+    private BigDecimal capitalMaximo;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal creditLimit;
+    @Column(nullable = false, precision = 16, scale = 12)
+    private BigDecimal teaMinima;
+
+    @Column(nullable = false, precision = 16, scale = 12)
+    private BigDecimal teaMaxima;
 
     @Column(nullable = false)
-    private Integer maxInstallments;
+    private Integer plazoMaximoMeses;
+
+    /**
+     * Si la tienda aplica el periodo de gracia total automatico (de la fecha
+     * de compra a la siguiente fecha de corte, 15 o 30 de cada mes).
+     */
+    @Column(nullable = false)
+    private Boolean otorgaGracia;
 }

@@ -24,8 +24,8 @@ public class AdministratorService {
     }
 
     public Administrator createAdministrator(Administrator administrator) {
-        if(administratorRepository.existsByEmailIgnoreCase(administrator.getEmail())
-                || clientRepository.existsByEmailIgnoreCase(administrator.getEmail())){
+        if(administratorRepository.existsByEmail(administrator.getEmail())
+                || clientRepository.existsByEmail(administrator.getEmail())){
             throw new IllegalArgumentException("El correo ya se encuentra registrado");
         }
 
@@ -37,11 +37,7 @@ public class AdministratorService {
             administrator.setStore(null);
         }
 
-        administrator.setFirstName(administrator.getFirstName().trim());
-        administrator.setLastName(administrator.getLastName().trim());
-        administrator.setEmail(administrator.getEmail().trim().toLowerCase());
         administrator.setPassword(passwordEncoder.encode(administrator.getPassword()));
-        administrator.setActive(true);
         return administratorRepository.save(administrator);
     }
 }

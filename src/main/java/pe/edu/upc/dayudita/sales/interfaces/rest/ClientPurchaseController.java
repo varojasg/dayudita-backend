@@ -58,8 +58,6 @@ public class ClientPurchaseController {
                 purchase.getPaymentMode(),
                 purchase.getStatus(),
                 purchase.getTotal(),
-                purchase.getAnnualEffectiveRate(),
-                purchase.getInstallmentCount(),
                 items
         );
     }

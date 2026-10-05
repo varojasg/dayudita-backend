@@ -1,5 +1,6 @@
 package pe.edu.upc.dayudita.clients.application;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,13 +8,17 @@ import pe.edu.upc.dayudita.clients.domain.model.Client;
 import pe.edu.upc.dayudita.clients.domain.model.ClientAccount;
 import pe.edu.upc.dayudita.clients.domain.repository.ClientAccountRepository;
 import pe.edu.upc.dayudita.clients.domain.repository.ClientRepository;
+import pe.edu.upc.dayudita.clients.interfaces.rest.dto.AssociateClientRequest;
 import pe.edu.upc.dayudita.clients.interfaces.rest.dto.CreateClientRequest;
 import pe.edu.upc.dayudita.clients.interfaces.rest.dto.UpdateClientRequest;
+import pe.edu.upc.dayudita.finance.application.FinancialConfigurationService;
+import pe.edu.upc.dayudita.finance.domain.model.FinancialConfiguration;
 import pe.edu.upc.dayudita.iam.application.CurrentUserService;
 import pe.edu.upc.dayudita.iam.domain.repository.AdministratorRepository;
 import pe.edu.upc.dayudita.stores.domain.model.Store;
 import pe.edu.upc.dayudita.stores.domain.repository.StoreRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -23,23 +28,29 @@ public class ClientService {
     private final ClientAccountRepository clientAccountRepository;
     private final StoreRepository storeRepository;
     private final AdministratorRepository administratorRepository;
+    private final FinancialConfigurationService financialConfigurationService;
     private final PasswordEncoder passwordEncoder;
     private final CurrentUserService currentUserService;
+    private final BigDecimal teaMoratoria;
 
     public ClientService(
             ClientRepository clientRepository,
             ClientAccountRepository clientAccountRepository,
             StoreRepository storeRepository,
             AdministratorRepository administratorRepository,
+            FinancialConfigurationService financialConfigurationService,
             PasswordEncoder passwordEncoder,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            @Value("${dayudita.tea-moratoria:0.12}") BigDecimal teaMoratoria
     ){
         this.clientRepository = clientRepository;
         this.clientAccountRepository = clientAccountRepository;
         this.storeRepository = storeRepository;
         this.administratorRepository = administratorRepository;
+        this.financialConfigurationService = financialConfigurationService;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
+        this.teaMoratoria = teaMoratoria;
     }
 
     public List<ClientAccount> getClientsByStore(Long storeId){
@@ -73,8 +84,8 @@ public class ClientService {
             throw new IllegalArgumentException("La tienda se encuentra inactiva");
         }
 
-        if(clientRepository.existsByEmailIgnoreCase(request.email())
-                || administratorRepository.existsByEmailIgnoreCase(request.email())){
+        if(clientRepository.existsByEmail(request.email())
+                || administratorRepository.existsByEmail(request.email())){
             throw new IllegalArgumentException("El correo ya se encuentra registrado");
         }
 
@@ -82,34 +93,34 @@ public class ClientService {
             throw new IllegalArgumentException("El documento ya se encuentra registrado");
         }
 
+        validateTeaPactada(storeId, request.teaPactada());
+        validatePlazoMaximoMeses(storeId, request.plazoMaximoMeses());
+
         Client client = new Client();
-        client.setFirstName(request.firstName().trim());
-        client.setLastName(request.lastName().trim());
-        client.setDocumentNumber(request.documentNumber().trim());
-        client.setEmail(request.email().trim().toLowerCase());
+        client.setFirstName(request.firstName());
+        client.setLastName(request.lastName());
+        client.setDocumentNumber(request.documentNumber());
+        client.setEmail(request.email());
         client.setPassword(passwordEncoder.encode(request.password()));
-        client.setPhone(request.phone() == null ? null : request.phone().trim());
-        client.setActive(true);
+        client.setPhone(request.phone());
 
         client = clientRepository.save(client);
 
         ClientAccount account = new ClientAccount();
         account.setClient(client);
         account.setStore(store);
-        account.setCutoffDay(request.cutoffDay());
-        account.setPaymentDay(request.paymentDay());
-        account.setActive(true);
+        account.setTeaPactada(request.teaPactada());
+        account.setTeaMoratoriaPactada(teaMoratoria);
+        account.setCurrency(request.currency());
+        account.setLimiteCredito(request.limiteCredito());
+        account.setPlazoMaximoMeses(request.plazoMaximoMeses());
+        account.setDiaCorte(request.diaCorte());
 
         return clientAccountRepository.save(account);
     }
 
     @Transactional
-    public ClientAccount associateClient(
-            Long storeId,
-            Long clientId,
-            Integer cutoffDay,
-            Integer paymentDay
-    ){
+    public ClientAccount associateClient(Long storeId, Long clientId, AssociateClientRequest request){
         currentUserService.validateStoreAdmin(storeId);
 
         Store store = storeRepository.findById(storeId)
@@ -126,6 +137,9 @@ public class ClientService {
             throw new IllegalArgumentException("El cliente se encuentra inactivo");
         }
 
+        validateTeaPactada(storeId, request.teaPactada());
+        validatePlazoMaximoMeses(storeId, request.plazoMaximoMeses());
+
         ClientAccount existingAccount = clientAccountRepository
                 .findByClient_IdAndStore_Id(clientId, storeId)
                 .orElse(null);
@@ -135,9 +149,8 @@ public class ClientService {
                 throw new IllegalArgumentException("El cliente ya se encuentra asociado a esta tienda");
             }
 
+            applyAccountTerms(existingAccount, request);
             existingAccount.setActive(true);
-            existingAccount.setCutoffDay(cutoffDay);
-            existingAccount.setPaymentDay(paymentDay);
 
             return clientAccountRepository.save(existingAccount);
         }
@@ -145,8 +158,7 @@ public class ClientService {
         ClientAccount account = new ClientAccount();
         account.setClient(client);
         account.setStore(store);
-        account.setCutoffDay(cutoffDay);
-        account.setPaymentDay(paymentDay);
+        applyAccountTerms(account, request);
 
         return clientAccountRepository.save(account);
     }
@@ -165,16 +177,32 @@ public class ClientService {
                         "El cliente no se encuentra asociado a esta tienda"
                 ));
 
+        validateTeaPactada(storeId, request.teaPactada());
+        validatePlazoMaximoMeses(storeId, request.plazoMaximoMeses());
+
         Client client = account.getClient();
         client.setFirstName(request.firstName());
         client.setLastName(request.lastName());
         client.setPhone(request.phone());
 
-        account.setCutoffDay(request.cutoffDay());
-        account.setPaymentDay(request.paymentDay());
+        account.setTeaPactada(request.teaPactada());
+        account.setTeaMoratoriaPactada(teaMoratoria);
+        account.setCurrency(request.currency());
+        account.setLimiteCredito(request.limiteCredito());
+        account.setPlazoMaximoMeses(request.plazoMaximoMeses());
+        account.setDiaCorte(request.diaCorte());
 
         clientRepository.save(client);
         return clientAccountRepository.save(account);
+    }
+
+    private void applyAccountTerms(ClientAccount account, AssociateClientRequest request){
+        account.setTeaPactada(request.teaPactada());
+        account.setTeaMoratoriaPactada(teaMoratoria);
+        account.setCurrency(request.currency());
+        account.setLimiteCredito(request.limiteCredito());
+        account.setPlazoMaximoMeses(request.plazoMaximoMeses());
+        account.setDiaCorte(request.diaCorte());
     }
 
     @Transactional
@@ -194,5 +222,25 @@ public class ClientService {
     @Transactional
     public void deactivateClient(Long storeId, Long clientId){
         updateClientStatus(storeId, clientId, false);
+    }
+
+    private void validateTeaPactada(Long storeId, BigDecimal teaPactada){
+        FinancialConfiguration policy = financialConfigurationService.getConfiguration(storeId);
+
+        if(teaPactada.compareTo(policy.getTeaMinima()) < 0 || teaPactada.compareTo(policy.getTeaMaxima()) > 0){
+            throw new IllegalArgumentException(
+                    "La TEA pactada debe encontrarse dentro del rango permitido por la tienda"
+            );
+        }
+    }
+
+    private void validatePlazoMaximoMeses(Long storeId, Integer plazoMaximoMeses){
+        FinancialConfiguration policy = financialConfigurationService.getConfiguration(storeId);
+
+        if(plazoMaximoMeses > policy.getPlazoMaximoMeses()){
+            throw new IllegalArgumentException(
+                    "El plazo maximo pactado no puede superar el plazo maximo permitido por la tienda"
+            );
+        }
     }
 }

@@ -9,7 +9,7 @@
 		<relativePath/>
 	</parent>
 	<groupId>pe.edu.upc</groupId>
-	<artifactId>appdayudita-backend</artifactId>
+	<artifactId>dayudita</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>

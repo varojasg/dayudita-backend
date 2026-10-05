@@ -2,6 +2,7 @@ package pe.edu.upc.dayudita.stores.application;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upc.dayudita.finance.application.FinancialConfigurationService;
 import pe.edu.upc.dayudita.iam.application.AdministratorService;
 import pe.edu.upc.dayudita.iam.domain.model.Administrator;
 import pe.edu.upc.dayudita.iam.domain.model.AdministratorRole;
@@ -15,10 +16,16 @@ import java.util.List;
 public class StoreService {
     private final StoreRepository storeRepository;
     private final AdministratorService administratorService;
+    private final FinancialConfigurationService financialConfigurationService;
 
-    public StoreService(StoreRepository storeRepository, AdministratorService administratorService){
+    public StoreService(
+            StoreRepository storeRepository,
+            AdministratorService administratorService,
+            FinancialConfigurationService financialConfigurationService
+    ){
         this.storeRepository = storeRepository;
         this.administratorService = administratorService;
+        this.financialConfigurationService = financialConfigurationService;
     }
 
     public List<Store> getAllStores(){
@@ -41,16 +48,17 @@ public class StoreService {
             String adminPassword
     ){
         Store store = new Store();
-        store.setName(name.trim());
-        store.setAddress(address.trim());
-        store.setPhone(phone == null ? null : phone.trim());
+        store.setName(name);
+        store.setAddress(address);
+        store.setPhone(phone);
 
         store = storeRepository.save(store);
+        financialConfigurationService.createDefaultConfiguration(store);
 
         Administrator administrator = new Administrator();
-        administrator.setFirstName(adminFirstName.trim());
-        administrator.setLastName(adminLastName.trim());
-        administrator.setEmail(adminEmail.trim().toLowerCase());
+        administrator.setFirstName(adminFirstName);
+        administrator.setLastName(adminLastName);
+        administrator.setEmail(adminEmail);
         administrator.setPassword(adminPassword);
         administrator.setRole(AdministratorRole.STORE_ADMIN);
         administrator.setStore(store);

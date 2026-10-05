@@ -15,8 +15,6 @@ public record PurchaseResponse(
         PurchasePaymentMode paymentMode,
         PurchaseStatus status,
         BigDecimal total,
-        BigDecimal annualEffectiveRate,
-        Integer installmentCount,
         List<PurchaseItemResponse> items
 ) {
 }

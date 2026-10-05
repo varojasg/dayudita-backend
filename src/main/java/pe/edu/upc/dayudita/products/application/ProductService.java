@@ -35,7 +35,7 @@ public class ProductService {
     }
 
     public List<Product> getProductsByStore(Long storeId){
-        currentUserService.validateStoreReadAccess(storeId);
+        currentUserService.validateStoreAdmin(storeId);
         return productRepository.findByStore_Id(storeId);
     }
 
@@ -69,8 +69,6 @@ public class ProductService {
             throw new IllegalArgumentException("La tienda se encuentra inactiva");
         }
 
-        validatePaymentModes(request.allowsSinglePayment(), request.allowsInstallments());
-
         Product product = new Product();
         product.setStore(store);
         product.setName(request.name());
@@ -81,7 +79,6 @@ public class ProductService {
         product.setImageUrl(request.imageUrl());
         product.setCashPrice(request.cashPrice());
         product.setCreditPrice(request.creditPrice());
-        product.setAllowsSinglePayment(request.allowsSinglePayment());
         product.setAllowsInstallments(request.allowsInstallments());
 
         return productRepository.save(product);
@@ -94,8 +91,6 @@ public class ProductService {
         Product product = productRepository.findByIdAndStore_Id(productId, storeId)
                 .orElseThrow(() -> new IllegalArgumentException("El producto no pertenece a esta tienda"));
 
-        validatePaymentModes(request.allowsSinglePayment(), request.allowsInstallments());
-
         product.setName(request.name());
         product.setSupplier(request.supplier());
         product.setBrand(request.brand());
@@ -104,7 +99,6 @@ public class ProductService {
         product.setImageUrl(request.imageUrl());
         product.setCashPrice(request.cashPrice());
         product.setCreditPrice(request.creditPrice());
-        product.setAllowsSinglePayment(request.allowsSinglePayment());
         product.setAllowsInstallments(request.allowsInstallments());
 
         return productRepository.save(product);
@@ -126,9 +120,4 @@ public class ProductService {
         updateProductStatus(storeId, productId, false);
     }
 
-    private void validatePaymentModes(Boolean allowsSinglePayment, Boolean allowsInstallments){
-        if(!allowsSinglePayment && !allowsInstallments){
-            throw new IllegalArgumentException("El producto debe permitir al menos una modalidad de credito");
-        }
-    }
 }

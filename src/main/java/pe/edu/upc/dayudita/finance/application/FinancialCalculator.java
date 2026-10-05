@@ -5,18 +5,39 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+/**
+ * Motor de cálculo del método francés vencido ordinario, quincenal, con
+ * periodos de gracia (total/parcial) y mora. Las fórmulas y las escalas de
+ * redondeo reproducen exactamente el simulador de Excel que es la fuente de
+ * verdad del curso.
+ */
 @Component
 public class FinancialCalculator {
 
-    private static final int COMMERCIAL_YEAR_DAYS = 360;
-    private static final int RATE_SCALE = 12;
+    public static final int COMMERCIAL_YEAR_DAYS = 360;
+    public static final int PAYMENT_PERIOD_DAYS = 15;
 
+    private static final int RATE_SCALE = 9;
+    private static final int INTERNAL_SCALE = 7;
+    private static final int MONEY_SCALE = 2;
+
+    /**
+     * TEQ = (1 + teaPactada)^(15/360) - 1, redondeada a 9 decimales.
+     */
+    public BigDecimal periodicRate(BigDecimal annualEffectiveRate){
+        return effectiveRateForDays(annualEffectiveRate, PAYMENT_PERIOD_DAYS);
+    }
+
+    /**
+     * Tasa efectiva equivalente a la TEA dada para un número de días,
+     * sobre año comercial de 360 días: (1+TEA)^(dias/360) - 1.
+     * Redondeada a 9 decimales (igual que el TEQ y la tasa moratoria de tramo).
+     */
     public BigDecimal effectiveRateForDays(BigDecimal annualEffectiveRate, int days){
         if(days <= 0){
             return BigDecimal.ZERO.setScale(RATE_SCALE, RoundingMode.HALF_UP);
         }
 
-        // Primero, la TEA se traslada al número de días del periodo usando el año comercial de 360 días: TEP = (1 + TEA)^(días/360) - 1.
         double base = BigDecimal.ONE.add(annualEffectiveRate).doubleValue();
         double exponent = (double) days / COMMERCIAL_YEAR_DAYS;
         double result = Math.pow(base, exponent) - 1;
@@ -24,51 +45,73 @@ public class FinancialCalculator {
         return BigDecimal.valueOf(result).setScale(RATE_SCALE, RoundingMode.HALF_UP);
     }
 
-    public BigDecimal capitalize(BigDecimal principal, BigDecimal effectiveRate){
-        // Luego, si existe un periodo de gracia total, no se paga cuota ni amortización; por eso el interés del periodo se capitaliza: Saldo final = Saldo inicial * (1 + TEP).
-        BigDecimal result = principal.multiply(BigDecimal.ONE.add(effectiveRate));
-        return money(result);
-    }
-
-    public BigDecimal frenchPayment(
-            BigDecimal principal,
-            BigDecimal periodRate,
-            int installmentCount
-    ){
-        // Después, en el método francés vencido se obtiene una cuota constante: R = C * [TEP * (1 + TEP)^n] / [(1 + TEP)^n - 1].
-        double c = principal.doubleValue();
-        double i = periodRate.doubleValue();
-        double factor = Math.pow(1 + i, installmentCount);
-        double payment = c * ((i * factor) / (factor - 1));
-
-        return money(BigDecimal.valueOf(payment));
-    }
-
+    /**
+     * I(k) = redondear7(SI(k) * TEQ)
+     */
     public BigDecimal installmentInterest(BigDecimal openingBalance, BigDecimal periodRate){
-        // A continuación, el interés de cada cuota se calcula sobre el saldo inicial del periodo: I = TEP * SI.
-        return money(openingBalance.multiply(periodRate));
+        return internal(openingBalance.multiply(periodRate));
     }
 
-    public BigDecimal installmentAmortization(BigDecimal payment, BigDecimal interest){
-        // Por lo tanto, la amortización que reduce el capital es la parte de la cuota que queda después de restar el interés: A = R - I.
-        return money(payment.subtract(interest));
-    }
-
-    public BigDecimal moratoryInterest(
-            BigDecimal overdueAmount,
-            BigDecimal moratoryAnnualEffectiveRate,
-            int overdueDays
+    /**
+     * R(k) para una cuota en tipo S: cuota francesa calculada sobre los
+     * periodos que quedan por delante (incluyendo la actual).
+     * R = SI * TEQ * (1+TEQ)^m / ((1+TEQ)^m - 1)
+     */
+    public BigDecimal frenchInstallmentPayment(
+            BigDecimal openingBalance,
+            BigDecimal periodRate,
+            int remainingPeriods
     ){
+        double si = openingBalance.doubleValue();
+        double i = periodRate.doubleValue();
+        double factor = Math.pow(1 + i, remainingPeriods);
+        double payment = si * ((i * factor) / (factor - 1));
+
+        return internal(BigDecimal.valueOf(payment));
+    }
+
+    /**
+     * A(k) = R(k) - I(k)
+     */
+    public BigDecimal amortization(BigDecimal payment, BigDecimal interest){
+        return internal(payment.subtract(interest));
+    }
+
+    /**
+     * Tasa moratoria del tramo = (1 + teaMoratoriaPactada)^(diasMora/360) - 1,
+     * redondeada a 9 decimales. 0 si no hay días de mora.
+     */
+    public BigDecimal moratoryTrancheRate(BigDecimal moratoryAnnualEffectiveRate, int overdueDays){
         if(overdueDays <= 0){
-            return money(BigDecimal.ZERO);
+            return BigDecimal.ZERO.setScale(RATE_SCALE, RoundingMode.HALF_UP);
         }
 
-        // Finalmente, cuando existe atraso, la tasa moratoria anual se convierte a los días vencidos y se aplica únicamente al importe que permanece pendiente.
-        BigDecimal moratoryRate = effectiveRateForDays(moratoryAnnualEffectiveRate, overdueDays);
-        return money(overdueAmount.multiply(moratoryRate));
+        return effectiveRateForDays(moratoryAnnualEffectiveRate, overdueDays);
+    }
+
+    /**
+     * interesMoratorio(k) = redondear7( R(k) * tasaMoratoriaTramo(k) )
+     */
+    public BigDecimal moratoryInterest(BigDecimal installmentPayment, BigDecimal moratoryTrancheRate){
+        if(moratoryTrancheRate.compareTo(BigDecimal.ZERO) == 0){
+            return internal(BigDecimal.ZERO);
+        }
+
+        return internal(installmentPayment.multiply(moratoryTrancheRate));
+    }
+
+    /**
+     * pagoTotal(k) = R(k) + interesMoratorio(k)
+     */
+    public BigDecimal totalPayment(BigDecimal installmentPayment, BigDecimal moratoryInterest){
+        return internal(installmentPayment.add(moratoryInterest));
+    }
+
+    private BigDecimal internal(BigDecimal value){
+        return value.setScale(INTERNAL_SCALE, RoundingMode.HALF_UP);
     }
 
     public BigDecimal money(BigDecimal value){
-        return value.setScale(2, RoundingMode.HALF_UP);
+        return value.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
     }
 }

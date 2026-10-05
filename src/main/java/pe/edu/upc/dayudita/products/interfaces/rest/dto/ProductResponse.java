@@ -14,7 +14,6 @@ public record ProductResponse(
         String imageUrl,
         BigDecimal cashPrice,
         BigDecimal creditPrice,
-        Boolean allowsSinglePayment,
         Boolean allowsInstallments,
         Boolean active
 

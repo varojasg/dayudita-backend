@@ -6,5 +6,5 @@ import pe.edu.upc.dayudita.finance.domain.model.FinancialConfiguration;
 import java.util.Optional;
 
 public interface FinancialConfigurationRepository extends JpaRepository<FinancialConfiguration, Long> {
-    Optional<FinancialConfiguration> findFirstByOrderByIdAsc();
+    Optional<FinancialConfiguration> findByStore_Id(Long storeId);
 }

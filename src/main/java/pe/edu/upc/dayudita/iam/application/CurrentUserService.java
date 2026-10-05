@@ -42,18 +42,6 @@ public class CurrentUserService {
         }
     }
 
-    public void validateStoreReadAccess(Long storeId){
-        ApplicationUserDetails user = getCurrentUser();
-
-        if("SYSTEM_ADMIN".equals(user.getRole())){
-            return;
-        }
-
-        if(!"STORE_ADMIN".equals(user.getRole()) || !storeId.equals(user.getStoreId())){
-            throw new AccessDeniedException("No tienes permisos para consultar esta tienda");
-        }
-    }
-
     public Long getCurrentClientId(){
         ApplicationUserDetails user = getCurrentUser();
 
