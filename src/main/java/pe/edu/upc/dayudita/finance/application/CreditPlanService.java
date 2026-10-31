@@ -250,9 +250,7 @@ public class CreditPlanService {
     }
 
     /**
-     * Mora y pago exacto de una cuota evaluados a una fecha dada (la fecha
-     * de pago real si se esta registrando un pago, o hoy si solo se esta
-     * consultando el cronograma).
+     * Mora y pago exacto de una cuota evaluados a una fecha dada
      */
     public MoratoryBreakdown computeMoratoryBreakdown(
             Installment installment,
@@ -303,9 +301,9 @@ public class CreditPlanService {
     }
 
     /**
-     * Arma el cronograma de exactamente {@code n} periodos de 15 dias
+     * Arma el cronograma de exactamente n periodos de 15 dias
      * comerciales contados desde la fecha de compra: el periodo j vence en
-     * compra + 15 x j. Si {@code aplicaGracia} es verdadero, el periodo 1 es
+     * compra + 15 x j. Si aplicaGracia es verdadero, el periodo 1 es
      * de gracia total (tipo T): I = SI x TEQ, cuota 0, amortizacion 0 y el
      * interes se capitaliza (SF = SI + I), sin requerir pago. Los periodos
      * siguientes, hasta el n, son cuotas estandar (tipo S) del metodo

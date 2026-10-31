@@ -5,11 +5,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
-/**
- * Fechas sobre año comercial de 360 días (12 meses de 30 días), usando la
- * convención europea de DIAS360: solo el día 31 se ajusta a 30; los días de
- * febrero no se tocan.
- */
+
 @Service
 public class FinancialDateService {
 
@@ -23,13 +19,6 @@ public class FinancialDateService {
         return commercialSerial(endDate) - commercialSerial(startDate);
     }
 
-    /**
-     * Vencimiento del periodo {@code period}: fecha de compra +
-     * {@value #PAYMENT_PERIOD_DAYS} x periodo dias comerciales. Cada fecha se
-     * calcula desde la compra y no desde la fecha anterior: si una cae en un
-     * dia que el mes no tiene (29 o 30 de febrero) se ajusta al ultimo dia
-     * del mes sin desfasar las siguientes.
-     */
     public LocalDate dueDateForPeriod(LocalDate purchaseDate, int period){
         return fromCommercialSerial(commercialSerial(purchaseDate) + PAYMENT_PERIOD_DAYS * period);
     }

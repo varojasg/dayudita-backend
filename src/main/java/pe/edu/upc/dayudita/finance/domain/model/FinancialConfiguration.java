@@ -8,9 +8,7 @@ import pe.edu.upc.dayudita.stores.domain.model.Store;
 
 import java.math.BigDecimal;
 
-/**
- * Política de crédito de una tienda (método francés con gracia).
- */
+
 @Entity
 @Table(name = "financial_configuration")
 @Getter
@@ -41,10 +39,7 @@ public class FinancialConfiguration {
     @Column(nullable = false)
     private Integer plazoMaximoMeses;
 
-    /**
-     * Si la tienda otorga gracia total en el primer periodo (15 dias desde la
-     * fecha de compra; el interes se calcula con la TEQ y se capitaliza).
-     */
+
     @Column(nullable = false)
     private Boolean otorgaGracia;
 }
