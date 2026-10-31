@@ -25,12 +25,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+
 class FinancialCalculatorTest {
 
     private static final BigDecimal CAPITAL = new BigDecimal("500.00");
     private static final BigDecimal TEQ = new BigDecimal("0.007625660");
 
-    /** Caso 1: valores internos (7 decimales) de cada periodo. */
+
     private static final List<Period> CASE_1 = List.of(
             new Period(GraceType.TOTAL, "500.0000000", "3.8128300", "0.0000000", "503.8128300"),
             new Period(GraceType.STANDARD, "503.8128300", "3.8419053", "74.1853128", "433.4694225"),
@@ -277,7 +278,7 @@ class FinancialCalculatorTest {
         return service.toCreditPlanResponse(plan);
     }
 
- 
+
     private void assertSchedule(List<Period> expected, List<LocalDate> dueDates, CreditPlanResponse plan){
         assertEquals(expected.size(), plan.installments().size());
 
@@ -298,7 +299,7 @@ class FinancialCalculatorTest {
         }
     }
 
-   
+    /** Recorre las formulas con 7 decimales, que la respuesta ya no expone. */
     private void assertInternalAmounts(List<Period> expected){
         int n = expected.size();
         BigDecimal balance = CAPITAL;

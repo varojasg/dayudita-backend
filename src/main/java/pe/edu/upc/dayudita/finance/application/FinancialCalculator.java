@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Algoritmo de calculo del metodo frances
+ * Algoritmo metodo frances vencido ordinario
  */
 @Component
 public class FinancialCalculator {
@@ -18,18 +18,12 @@ public class FinancialCalculator {
     private static final int INTERNAL_SCALE = 7;
     private static final int MONEY_SCALE = 2;
 
-    /**
-     * TEQ = (1 + teaPactada)^(15/360) - 1, redondeada a 9 decimales.
-     */
+
     public BigDecimal periodicRate(BigDecimal annualEffectiveRate){
         return effectiveRateForDays(annualEffectiveRate, PAYMENT_PERIOD_DAYS);
     }
 
-    /**
-     * Tasa efectiva equivalente a la TEA dada para un número de días,
-     * sobre año comercial de 360 días: (1+TEA)^(dias/360) - 1.
-     * Redondeada a 9 decimales.
-     */
+
     public BigDecimal effectiveRateForDays(BigDecimal annualEffectiveRate, int days){
         if(days <= 0){
             return BigDecimal.ZERO.setScale(RATE_SCALE, RoundingMode.HALF_UP);
@@ -42,18 +36,12 @@ public class FinancialCalculator {
         return BigDecimal.valueOf(result).setScale(RATE_SCALE, RoundingMode.HALF_UP);
     }
 
-    /**
-     * I(k) = redondear7(SI(k) * TEQ)
-     */
+
     public BigDecimal installmentInterest(BigDecimal openingBalance, BigDecimal periodRate){
         return internal(openingBalance.multiply(periodRate));
     }
 
-    /**
-     * R(k) para una cuota en tipo S: cuota francesa calculada sobre los
-     * periodos que quedan por delante (incluyendo la actual).
-     * R = SI * TEQ * (1+TEQ)^m / ((1+TEQ)^m - 1)
-     */
+
     public BigDecimal frenchInstallmentPayment(
             BigDecimal openingBalance,
             BigDecimal periodRate,
@@ -67,17 +55,12 @@ public class FinancialCalculator {
         return internal(BigDecimal.valueOf(payment));
     }
 
-    /**
-     * A(k) = R(k) - I(k)
-     */
+
     public BigDecimal amortization(BigDecimal payment, BigDecimal interest){
         return internal(payment.subtract(interest));
     }
 
-    /**
-     * Tasa moratoria del tramo = (1 + teaMoratoriaPactada)^(diasMora/360) - 1,
-     * redondeada a 9 decimales. 0 si no hay días de mora.
-     */
+
     public BigDecimal moratoryTrancheRate(BigDecimal moratoryAnnualEffectiveRate, int overdueDays){
         if(overdueDays <= 0){
             return BigDecimal.ZERO.setScale(RATE_SCALE, RoundingMode.HALF_UP);
@@ -86,9 +69,7 @@ public class FinancialCalculator {
         return effectiveRateForDays(moratoryAnnualEffectiveRate, overdueDays);
     }
 
-    /**
-     * interesMoratorio(k) = redondear7( R(k) * tasaMoratoriaTramo(k) )
-     */
+
     public BigDecimal moratoryInterest(BigDecimal installmentPayment, BigDecimal moratoryTrancheRate){
         if(moratoryTrancheRate.compareTo(BigDecimal.ZERO) == 0){
             return internal(BigDecimal.ZERO);
@@ -97,9 +78,7 @@ public class FinancialCalculator {
         return internal(installmentPayment.multiply(moratoryTrancheRate));
     }
 
-    /**
-     * pagoTotal(k) = R(k) + interesMoratorio(k)
-     */
+
     public BigDecimal totalPayment(BigDecimal installmentPayment, BigDecimal moratoryInterest){
         return internal(installmentPayment.add(moratoryInterest));
     }
