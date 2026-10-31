@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 
 /**
  * Política de crédito de una tienda (método francés con gracia).
- * Es la política comercial, no una configuración global del sistema.
  */
 @Entity
 @Table(name = "financial_configuration")
@@ -43,8 +42,8 @@ public class FinancialConfiguration {
     private Integer plazoMaximoMeses;
 
     /**
-     * Si la tienda aplica el periodo de gracia total automatico (de la fecha
-     * de compra a la siguiente fecha de corte, 15 o 30 de cada mes).
+     * Si la tienda otorga gracia total en el primer periodo (15 dias desde la
+     * fecha de compra; el interes se calcula con la TEQ y se capitaliza).
      */
     @Column(nullable = false)
     private Boolean otorgaGracia;

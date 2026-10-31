@@ -6,10 +6,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Motor de cálculo del método francés vencido ordinario, quincenal, con
- * periodos de gracia (total/parcial) y mora. Las fórmulas y las escalas de
- * redondeo reproducen exactamente el simulador de Excel que es la fuente de
- * verdad del curso.
+ * Algoritmo de calculo del metodo frances
  */
 @Component
 public class FinancialCalculator {
@@ -31,7 +28,7 @@ public class FinancialCalculator {
     /**
      * Tasa efectiva equivalente a la TEA dada para un número de días,
      * sobre año comercial de 360 días: (1+TEA)^(dias/360) - 1.
-     * Redondeada a 9 decimales (igual que el TEQ y la tasa moratoria de tramo).
+     * Redondeada a 9 decimales.
      */
     public BigDecimal effectiveRateForDays(BigDecimal annualEffectiveRate, int days){
         if(days <= 0){

@@ -32,9 +32,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Datos de demo alineados al Caso B del simulador de Excel
- * (capital 500, TEA 20%, TEA moratoria 12%, 1 periodo de gracia total y
- * 1 parcial), para poder comparar directamente la demo contra el Excel.
+ * Datos de demo alineados al cronograma con gracia de FinancialCalculatorTest
+ * (capital 500, TEA 20%, TEA moratoria 12%, 4 meses = 8 periodos, gracia
+ * total a la TEQ en el periodo 1).
  */
 @Component
 @ConditionalOnProperty(name = "dayudita.seed-demo-data", havingValue = "true", matchIfMissing = true)

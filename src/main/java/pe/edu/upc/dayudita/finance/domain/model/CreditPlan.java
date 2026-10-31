@@ -48,13 +48,13 @@ public class CreditPlan {
     @Column(nullable = false)
     private Integer numeroMeses;
 
+    /** Numero total de periodos (meses x 2), incluida la gracia total si la hay. */
     @Column(nullable = false)
     private Integer installmentCount;
 
     /**
-     * Dias de gracia total realmente aplicados (de la fecha de compra a la
-     * siguiente fecha de corte, 15 o 30). Varia por compra; 0 si no aplico
-     * gracia (compra hecha justo en una fecha de corte, o tienda sin gracia).
+     * Dias de gracia total: 15 si el periodo 1 es de gracia, 0 si la tienda
+     * no la otorga. Dato informativo: el interes de la fila T usa la TEQ.
      */
     @Column(nullable = false)
     private Integer diasGraciaTotal;
