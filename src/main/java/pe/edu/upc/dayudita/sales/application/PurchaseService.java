@@ -115,8 +115,7 @@ public class PurchaseService {
                 policy.getOtorgaGracia(),
                 account.getTeaPactada(),
                 account.getTeaMoratoriaPactada(),
-                request.purchaseDate(),
-                account.getDiaCorte()
+                request.purchaseDate()
         );
     }
 

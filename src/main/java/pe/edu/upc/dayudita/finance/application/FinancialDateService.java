@@ -24,28 +24,14 @@ public class FinancialDateService {
     }
 
     /**
-     * Primera fecha de corte (dia {@code diaCorte} del mes, pactado con el
-     * cliente; si el mes es mas corto, cae en su ultimo dia) igual o
-     * posterior a la fecha dada.
+     * Vencimiento del periodo {@code period}: fecha de compra +
+     * {@value #PAYMENT_PERIOD_DAYS} x periodo dias comerciales. Cada fecha se
+     * calcula desde la compra y no desde la fecha anterior: si una cae en un
+     * dia que el mes no tiene (29 o 30 de febrero) se ajusta al ultimo dia
+     * del mes sin desfasar las siguientes.
      */
-    public LocalDate firstCutoffOnOrAfter(LocalDate date, int diaCorte){
-        YearMonth month = YearMonth.from(date);
-        LocalDate candidate = dateForDay(month, diaCorte);
-
-        if(!date.isAfter(candidate)){
-            return candidate;
-        }
-
-        return dateForDay(month.plusMonths(1), diaCorte);
-    }
-
-    /**
-     * Siguiente fecha de corte/pago: exactamente {@value #PAYMENT_PERIOD_DAYS}
-     * dias comerciales despues de la anterior (convencion 30/360), sin
-     * reenganchar a un dia fijo del calendario.
-     */
-    public LocalDate nextDueDate(LocalDate previousDueDate){
-        return fromCommercialSerial(commercialSerial(previousDueDate) + PAYMENT_PERIOD_DAYS);
+    public LocalDate dueDateForPeriod(LocalDate purchaseDate, int period){
+        return fromCommercialSerial(commercialSerial(purchaseDate) + PAYMENT_PERIOD_DAYS * period);
     }
 
     private LocalDate dateForDay(YearMonth month, int contractualDay){

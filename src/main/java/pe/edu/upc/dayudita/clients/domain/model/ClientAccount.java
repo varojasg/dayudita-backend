@@ -49,10 +49,8 @@ public class ClientAccount {
     private Integer plazoMaximoMeses;
 
     /**
-     * Dia del mes (1-31) en el que se pacta el corte del credito de este
-     * cliente. Ancla la gracia inicial y, desde ahi, las cuotas siguientes
-     * avanzan +15 dias comerciales exactos (sin reenganchar a un dia fijo
-     * del calendario).
+     * Día de corte pactado con el cliente. Es solo informativo: el cronograma
+     * se calcula en periodos de 15 días desde la fecha de compra.
      */
     @Column(nullable = false)
     private Integer diaCorte;
